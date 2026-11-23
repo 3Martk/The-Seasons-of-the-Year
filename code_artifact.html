@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شجرة الفصول الأربعة للأطفال</title>
+  <!-- خطوط عربية دافئة وجذابة للأطفال -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=Cairo:wght@600;800&display=swap" rel="stylesheet">
+  <!-- أيقونات FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif;
+      background: #1a1a2e;
+    }
+
+    /* الحاوية الرئيسية للتطبيق */
+    .app-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background 1.5s ease-in-out;
+    }
+
+    /* خلفية السماء ذات التدرج المتحرك حسب الفصل */
+    .sky-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      transition: opacity 1.5s ease-in-out;
+    }
+    .sky-spring { background: linear-gradient(180deg, #FAD0C4 0%, #FFD1FF 35%, #E8F5E9 100%); }
+    .sky-summer { background: linear-gradient(180deg, #4FC3F7 0%, #81D4FA 40%, #E8F5E9 100%); }
+    .sky-autumn { background: linear-gradient(180deg, #FFB74D 0%, #FFE082 45%, #FFF3E0 100%); }
+    .sky-winter { background: linear-gradient(180deg, #90CAF9 0%, #E0F7FA 50%, #F5F5F5 100%); }
+
+    /* كانفاس الجسيمات المتحركة (مطر، ثلج، أوراق، بتلات) */
+    #particleCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    /* مسرح المشهد الكرتوني SVG */
+    .scene-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    /* الشريط العلوي للقصة والتسديد للأطفال */
+    .story-banner-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding-top: 24px;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+
+    .story-banner {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border: 4px solid #FFF;
+      border-radius: 32px;
+      padding: 14px 36px;
+      box-shadow: 0 16px 32px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 850px;
+      text-align: center;
+      transform: translateY(0);
+      animation: floatBanner 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatBanner {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-6px); }
+    }
+
+    .story-icon {
+      font-size: 38px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    .story-text-group h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2D3748;
+      line-height: 1.2;
+    }
+
+    .story-text-group p {
+      font-size: 20px;
+      font-weight: 700;
+      color: #4A5568;
+      margin-top: 4px;
+    }
+
+    /* شريط أدوات التحكم السفلي للأطفال والمعلمين */
+    .controls-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 24px;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+
+    /* مؤشر التقدم التلقائي للفصل */
+    .progress-bar-wrap {
+      width: 280px;
+      height: 8px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 99px;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #FF6B6B;
+      border-radius: 99px;
+      transition: width 0.1s linear;
+    }
+
+    .controls-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border: 4px solid #FFFFFF;
+      border-radius: 36px;
+      padding: 12px 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* أزرار الفصول الكبيرة */
+    .season-btn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 800;
+      padding: 12px 24px;
+      border-radius: 24px;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
+    .season-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+    }
+    .season-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .btn-spring { background: linear-gradient(135deg, #FF758C, #FF7EB3); }
+    .btn-summer { background: linear-gradient(135deg, #42A5F5, #26C6DA); }
+    .btn-autumn { background: linear-gradient(135deg, #FFA726, #FB8C00); }
+    .btn-winter { background: linear-gradient(135deg, #7E57C2, #5C6BC0); }
+
+    .season-btn.active {
+      ring: 4px solid #FFF;
+      outline: 4px solid #2D3748;
+      transform: scale(1.08);
+    }
+
+    .divider {
+      width: 2px;
+      height: 36px;
+      background: #E2E8F0;
+      margin: 0 4px;
+    }
+
+    /* أزرار الإعدادات العامة (تشغيل، صوت، عرض) */
+    .icon-btn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: #EDF2F7;
+      color: #2D3748;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .icon-btn:hover {
+      background: #E2E8F0;
+      color: #1A202C;
+      transform: translateY(-2px);
+    }
+    .icon-btn.active-toggle {
+      background: #2D3748;
+      color: #FFF;
+    }
+
+    /* زر الخروج من وضع العرض الفائق */
+    .exit-presentation-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.9);
+      border: 3px solid #FFF;
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      color: #2D3748;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s;
+    }
+    .exit-presentation-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* وضع العرض الشامل (إخفاء الشريط السفلي والعلوي) */
+    .presentation-mode .story-banner-container,
+    .presentation-mode .controls-container {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(50px);
+    }
+    .presentation-mode .exit-presentation-btn {
+      display: flex;
+    }
+
+    /* أنيميشن اهتزاز الشجرة عند النقر */
+    @keyframes treeShake {
+      0% { transform: rotate(0deg); }
+      20% { transform: rotate(-4deg); }
+      40% { transform: rotate(4deg); }
+      60% { transform: rotate(-2deg); }
+      80% { transform: rotate(2deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .shake-tree {
+      animation: treeShake 0.6s ease-in-out;
+      transform-origin: bottom center;
+    }
+
+    /* تلميح النقر على الشجرة للأطفال */
+    .click-hint {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      background: rgba(255,255,255,0.95);
+      color: #2B2118;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      pointer-events: none;
+      animation: pulseHint 2s infinite;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    @keyframes pulseHint {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+      50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport" id="appViewport">
+    
+    <!-- خلفيات السماء ذات الانتقال السلس -->
+    <div class="sky-bg sky-spring" id="skyBg"></div>
+
+    <!-- كانفاس المؤثرات البصرية للجسيمات -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- زر الخروج عند وضع العرض الشامل -->
+    <button class="exit-presentation-btn" id="exitPresBtn">
+      <i class="fa-solid fa-compress"></i> خروج من وضع العرض
+    </button>
+
+    <!-- تلميح النقر للأطفال -->
+    <div class="click-hint" id="clickHint">
+      <i class="fa-solid fa-hand-pointer" style="color: #FF758C;"></i> انقر على الشجرة للمفاجأة!
+    </div>
+
+    <!-- الشريط العلوي لعنوان ومفهوم الفصل -->
+    <div class="story-banner-container">
+      <div class="story-banner" id="storyBanner">
+        <span class="story-icon" id="storyIcon">🌸</span>
+        <div class="story-text-group">
+          <h1 id="seasonTitle">فصل الربيع المبهج</h1>
+          <p id="seasonDesc">تتفتح الأزهار الوردية وتستيقظ الشجرة بأوراق خضراء غضة!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- المسرح الرسومي التفاعلي للشجرة (SVG كامل قابل للتغيير) -->
+    <svg class="scene-svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <!-- التدرجات اللونية للشجرة والعناصر -->
+        <!-- التلال -->
+        <linearGradient id="hillSpring" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#A1E887"/>
+          <stop offset="100%" stop-color="#55B947"/>
+        </linearGradient>
+        <linearGradient id="hillSummer" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#66BB6A"/>
+          <stop offset="100%" stop-color="#2E7D32"/>
+        </linearGradient>
+        <linearGradient id="hillAutumn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#D4E157"/>
+          <stop offset="100%" stop-color="#827717"/>
+        </linearGradient>
+        <linearGradient id="hillWinter" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="100%" stop-color="#CFD8DC"/>
+        </linearGradient>
+
+        <!-- أوراق الشجرة (Canopy Colors) -->
+        <linearGradient id="foliageSpring" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#B9F6CA"/>
+          <stop offset="50%" stop-color="#69F0AE"/>
+          <stop offset="100%" stop-color="#00C853"/>
+        </linearGradient>
+        <linearGradient id="foliageSummer" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4CAF50"/>
+          <stop offset="50%" stop-color="#2E7D32"/>
+          <stop offset="100%" stop-color="#1B5E20"/>
+        </linearGradient>
+        <linearGradient id="foliageAutumn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFD54F"/>
+          <stop offset="50%" stop-color="#FF9800"/>
+          <stop offset="100%" stop-color="#E65100"/>
+        </linearGradient>
+        <linearGradient id="foliageWinter" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ECEFF1" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#CFD8DC" stop-opacity="0.2"/>
+        </linearGradient>
+
+        <!-- جذع الشجرة -->
+        <linearGradient id="trunkGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#8D6E63"/>
+          <stop offset="50%" stop-color="#5D4037"/>
+          <stop offset="100%" stop-color="#3E2723"/>
+        </linearGradient>
+
+        <!-- أسلوب الظلال -->
+        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="12" stdDeviation="10" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <!-- الشمس الكرتونية الضاحكة -->
+      <g id="sunGroup" transform="translate(1000, 160)" style="transition: transform 1.5s ease, opacity 1.5s ease;">
+        <!-- أشعة الشمس -->
+        <g id="sunRays">
+          <circle cx="0" cy="0" r="55" fill="#FFE082" opacity="0.5"/>
+          <line x1="0" y1="-75" x2="0" y2="-62" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="0" y1="75" x2="0" y2="62" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="-75" y1="0" x2="-62" y2="0" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="75" y1="0" x2="62" y2="0" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="-53" y1="-53" x2="-44" y2="-44" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="53" y1="53" x2="44" y2="44" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="53" y1="-53" x2="44" y2="-44" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+          <line x1="-53" y1="53" x2="-44" y2="44" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <!-- قرص الشمس -->
+        <circle cx="0" cy="0" r="45" fill="#FFCA28"/>
+        <!-- وجه الشمس الضاحك -->
+        <circle cx="-14" cy="-8" r="5" fill="#5D4037"/>
+        <circle cx="14" cy="-8" r="5" fill="#5D4037"/>
+        <path d="M -16 10 Q 0 26 16 10" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="-22" cy="4" r="6" fill="#FF8A80" opacity="0.6"/>
+        <circle cx="22" cy="4" r="6" fill="#FF8A80" opacity="0.6"/>
+      </g>
+
+      <!-- السحب البيضاء الكرتونية -->
+      <g id="cloudsGroup">
+        <path class="cloud" d="M 150 160 Q 170 130 200 140 Q 230 120 260 140 Q 290 130 310 160 Q 330 190 290 200 L 170 200 Q 130 190 150 160 Z" fill="#FFFFFF" opacity="0.85" filter="url(#softShadow)"/>
+        <path class="cloud" d="M 750 120 Q 770 90 800 100 Q 830 80 860 100 Q 890 90 910 120 Q 930 150 890 160 L 770 160 Q 730 150 750 120 Z" fill="#FFFFFF" opacity="0.7" filter="url(#softShadow)"/>
+      </g>
+
+      <!-- التلة الخضراء (تتغير حسب الفصل) -->
+      <path id="hillPath" d="M -100 850 Q 300 560 600 620 Q 900 680 1300 850 Z" fill="url(#hillSpring)" style="transition: fill 1.5s ease;"/>
+
+      <!-- كومة أوراق الخريف المتساقطة على الأرض -->
+      <g id="autumnLeafPiles" opacity="0" style="transition: opacity 1.5s ease;">
+        <ellipse cx="480" cy="670" rx="90" ry="18" fill="#E65100" opacity="0.7"/>
+        <ellipse cx="680" cy="680" rx="110" ry="22" fill="#FB8C00" opacity="0.8"/>
+        <circle cx="430" cy="675" r="8" fill="#FDD835"/>
+        <circle cx="530" cy="668" r="10" fill="#E65100"/>
+        <circle cx="720" cy="675" r="9" fill="#FB8C00"/>
+      </g>
+
+      <!-- رجل الثلج الكرتوني (يظهر فقط في الشتاء) -->
+      <g id="snowmanGroup" transform="translate(820, 600)" opacity="0" style="transition: opacity 1.5s ease, transform 1.5s ease;">
+        <!-- الظل -->
+        <ellipse cx="0" cy="65" rx="55" ry="14" fill="#B0BEC5" opacity="0.5"/>
+        <!-- الجسم السفلي -->
+        <circle cx="0" cy="30" r="45" fill="#FFFFFF" filter="url(#softShadow)"/>
+        <!-- الرأس -->
+        <circle cx="0" cy="-30" r="32" fill="#FFFFFF" filter="url(#softShadow)"/>
+        <!-- العيون والابتسامة -->
+        <circle cx="-10" cy="-38" r="3.5" fill="#37474F"/>
+        <circle cx="10" cy="-38" r="3.5" fill="#37474F"/>
+        <!-- الأنف (جزرة) -->
+        <polygon points="0,-30 25,-26 0,-22" fill="#FF6D00"/>
+        <!-- الأزرار -->
+        <circle cx="0" cy="10" r="4" fill="#37474F"/>
+        <circle cx="0" cy="30" r="4" fill="#37474F"/>
+        <circle cx="0" cy="50" r="4" fill="#37474F"/>
+        <!-- القبعة -->
+        <rect x="-24" y="-62" width="48" height="8" rx="3" fill="#263238"/>
+        <rect x="-16" y="-88" width="32" height="28" rx="4" fill="#37474F"/>
+        <rect x="-16" y="-66" width="32" height="5" fill="#E53935"/>
+        <!-- الكوفية الحمراء -->
+        <path d="M -22 -10 Q 0 -4 22 -10 Q 15 15 8 35 L -4 35 Q -2 15 -22 -10 Z" fill="#E53935"/>
+      </g>
+
+      <!-- الشجرة الكبيرة الرئيسية (تفاعلية عند النقر) -->
+      <g id="mainTree" style="cursor: pointer;" transform-origin="600px 650px">
+        
+        <!-- ظل الشجرة على الأرض -->
+        <ellipse id="treeShadow" cx="600" cy="660" rx="180" ry="30" fill="#2E7D32" opacity="0.2" style="transition: fill 1.5s ease, opacity 1.5s ease;"/>
+
+        <!-- جذع الشجرة بتفاصيل خشبية كرتونية -->
+        <g id="treeTrunk">
+          <!-- الجذع الرئيسي -->
+          <path d="M 540 660 Q 560 520 520 420 Q 500 370 450 330 L 485 320 Q 545 370 575 420 Q 610 350 670 290 L 705 305 Q 640 370 615 440 Q 640 540 660 660 Z" fill="url(#trunkGrad)" filter="url(#softShadow)"/>
+          <!-- الأغصان الفرعية -->
+          <path d="M 575 430 Q 530 400 480 410 L 485 395 Q 535 385 585 415 Z" fill="#5D4037"/>
+          <path d="M 618 430 Q 660 395 710 410 L 705 395 Q 655 380 610 415 Z" fill="#4E342E"/>
+          <!-- خطوط تفاصيل اللحاء -->
+          <path d="M 570 630 Q 580 550 565 480" stroke="#3E2723" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6"/>
+          <path d="M 620 640 Q 610 560 625 490" stroke="#3E2723" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6"/>
+        </g>
+
+        <!-- أوراق الشجرة الكثيفة (Foliage Layer) -->
+        <g id="treeFoliage" style="transition: transform 1.5s ease;">
+          <!-- الكتلة الخلفية -->
+          <path d="M 420 350 Q 350 280 400 200 Q 480 120 600 130 Q 720 120 800 200 Q 850 280 780 350 Q 750 440 600 450 Q 450 440 420 350 Z" fill="url(#foliageSpring)" filter="url(#softShadow)" style="transition: fill 1.5s ease, opacity 1.5s ease;"/>
+          
+          <!-- الكتل الأمامية لإعطاء عمق كرتوني ثلاثي الأبعاد -->
+          <circle cx="480" cy="240" r="95" fill="url(#foliageSpring)" style="transition: fill 1.5s ease;"/>
+          <circle cx="720" cy="240" r="95" fill="url(#foliageSpring)" style="transition: fill 1.5s ease;"/>
+          <circle cx="600" cy="200" r="115" fill="url(#foliageSpring)" style="transition: fill 1.5s ease;"/>
+          <circle cx="530" cy="330" r="90" fill="url(#foliageSpring)" style="transition: fill 1.5s ease;"/>
+          <circle cx="670" cy="330" r="90" fill="url(#foliageSpring)" style="transition: fill 1.5s ease;"/>
+        </g>
+
+        <!-- ثمار التفاح (خاص بالصيف) -->
+        <g id="summerApples" opacity="0" style="transition: opacity 1.2s ease;">
+          <g transform="translate(480, 240)"><circle cx="0" cy="0" r="14" fill="#E53935"/><path d="M 0 -14 Q 4 -20 8 -16" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(710, 220)"><circle cx="0" cy="0" r="15" fill="#E53935"/><path d="M 0 -15 Q 4 -21 8 -17" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(600, 170)"><circle cx="0" cy="0" r="16" fill="#E53935"/><path d="M 0 -16 Q 4 -22 8 -18" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(540, 310)"><circle cx="0" cy="0" r="14" fill="#E53935"/><path d="M 0 -14 Q 4 -20 8 -16" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(660, 320)"><circle cx="0" cy="0" r="15" fill="#E53935"/><path d="M 0 -15 Q 4 -21 8 -17" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(430, 310)"><circle cx="0" cy="0" r="13" fill="#E53935"/><path d="M 0 -13 Q 4 -19 8 -15" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+          <g transform="translate(760, 290)"><circle cx="0" cy="0" r="14" fill="#E53935"/><path d="M 0 -14 Q 4 -20 8 -16" stroke="#2E7D32" stroke-width="3" fill="none"/></g>
+        </g>
+
+        <!-- زهور الربيع الوردية (خاص بالربيع) -->
+        <g id="springBlossoms" opacity="1" style="transition: opacity 1.2s ease;">
+          <!-- مجموعة زهور جميلة -->
+          <g transform="translate(450, 220)"><circle cx="0" cy="0" r="12" fill="#FF80AB"/><circle cx="-10" cy="0" r="8" fill="#FF4081"/><circle cx="10" cy="0" r="8" fill="#FF4081"/><circle cx="0" cy="-10" r="8" fill="#FF4081"/><circle cx="0" cy="10" r="8" fill="#FF4081"/><circle cx="0" cy="0" r="5" fill="#FFEB3B"/></g>
+          <g transform="translate(730, 250)"><circle cx="0" cy="0" r="12" fill="#FF80AB"/><circle cx="-10" cy="0" r="8" fill="#FF4081"/><circle cx="10" cy="0" r="8" fill="#FF4081"/><circle cx="0" cy="-10" r="8" fill="#FF4081"/><circle cx="0" cy="10" r="8" fill="#FF4081"/><circle cx="0" cy="0" r="5" fill="#FFEB3B"/></g>
+          <g transform="translate(580, 150)"><circle cx="0" cy="0" r="14" fill="#FF80AB"/><circle cx="-11" cy="0" r="9" fill="#FF4081"/><circle cx="11" cy="0" r="9" fill="#FF4081"/><circle cx="0" cy="-11" r="9" fill="#FF4081"/><circle cx="0" cy="11" r="9" fill="#FF4081"/><circle cx="0" cy="0" r="6" fill="#FFEB3B"/></g>
+          <g transform="translate(510, 320)"><circle cx="0" cy="0" r="11" fill="#FF80AB"/><circle cx="-8" cy="0" r="7" fill="#FF4081"/><circle cx="8" cy="0" r="7" fill="#FF4081"/><circle cx="0" cy="-8" r="7" fill="#FF4081"/><circle cx="0" cy="8" r="7" fill="#FF4081"/><circle cx="0" cy="0" r="4" fill="#FFEB3B"/></g>
+          <g transform="translate(670, 340)"><circle cx="0" cy="0" r="12" fill="#FF80AB"/><circle cx="-9" cy="0" r="8" fill="#FF4081"/><circle cx="9" cy="0" r="8" fill="#FF4081"/><circle cx="0" cy="-9" r="8" fill="#FF4081"/><circle cx="0" cy="9" r="8" fill="#FF4081"/><circle cx="0" cy="0" r="5" fill="#FFEB3B"/></g>
+        </g>
+
+        <!-- كتل الثلج الناعمة على أغصان الشتاء (خاص بالشتاء) -->
+        <g id="winterSnowCaps" opacity="0" style="transition: opacity 1.2s ease;">
+          <path d="M 440 320 Q 480 300 520 325 Q 500 310 440 320 Z" fill="#FFFFFF"/>
+          <path d="M 660 310 Q 700 290 740 315 Q 710 295 660 310 Z" fill="#FFFFFF"/>
+          <path d="M 520 230 Q 600 190 680 230 Q 600 205 520 230 Z" fill="#FFFFFF"/>
+          <path d="M 450 330 Q 480 310 500 330 Q 475 320 450 330 Z" fill="#FFFFFF"/>
+          <path d="M 670 300 Q 695 285 710 305 Z" fill="#FFFFFF"/>
+        </g>
+
+      </g>
+    </svg>
+
+    <!-- شريط أدوات التحكم السفلية للأطفال -->
+    <div class="controls-container">
+      <!-- شريط التقدم الزمني للتحول التلقائي -->
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+
+      <div class="controls-card">
+        <!-- أزرار اختيار الفصول الأربعة -->
+        <button class="season-btn btn-spring active" data-season="spring">
+          <span>🌸</span> الربيع
+        </button>
+        <button class="season-btn btn-summer" data-season="summer">
+          <span>☀️</span> الصيف
+        </button>
+        <button class="season-btn btn-autumn" data-season="autumn">
+          <span>🍂</span> الخريف
+        </button>
+        <button class="season-btn btn-winter" data-season="winter">
+          <span>❄️</span> الشتاء
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- أزرار الإعدادات -->
+        <button class="icon-btn active-toggle" id="playPauseBtn" title="تشغيل / إيقاف التبديل التلقائي">
+          <i class="fa-solid fa-pause"></i> <span id="playPauseText">إيقاف</span>
+        </button>
+
+        <button class="icon-btn" id="soundBtn" title="تفعيل الأصوات الطبيعية">
+          <i class="fa-solid fa-volume-xmark"></i> <span>الصوت</span>
+        </button>
+
+        <button class="icon-btn" id="presentationBtn" title="عرض ملء الشاشة بدون أزرار">
+          <i class="fa-solid fa-expand"></i> <span>وضع العرض</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ===================================================
+       بيانات الفصول الأربعة (التنسيق، النصوص، والألوان)
+    =================================================== */
+    const seasonsData = {
+      spring: {
+        id: 'spring',
+        title: 'فصل الربيع المبهج',
+        desc: 'تتفتح الأزهار الوردية وتستيقظ الشجرة بأوراق خضراء غضة وترقص الفراشات!',
+        icon: '🌸',
+        skyClass: 'sky-spring',
+        hillFill: 'url(#hillSpring)',
+        foliageFill: 'url(#foliageSpring)',
+        treeShadowColor: '#2E7D32',
+        treeShadowOpacity: 0.25,
+        blossomsOpacity: 1,
+        applesOpacity: 0,
+        leafPilesOpacity: 0,
+        snowmanOpacity: 0,
+        snowCapsOpacity: 0,
+        btnClass: 'btn-spring'
+      },
+      summer: {
+        id: 'summer',
+        title: 'فصل الصيف المشرق',
+        desc: 'تكتسي الشجرة بأوراق خضراء كثيفة وتثمر تفاحاً أحمراً لذيذاً تحت شمس دافئة!',
+        icon: '☀️',
+        skyClass: 'sky-summer',
+        hillFill: 'url(#hillSummer)',
+        foliageFill: 'url(#foliageSummer)',
+        treeShadowColor: '#1B5E20',
+        treeShadowOpacity: 0.35,
+        blossomsOpacity: 0,
+        applesOpacity: 1,
+        leafPilesOpacity: 0,
+        snowmanOpacity: 0,
+        snowCapsOpacity: 0,
+        btnClass: 'btn-summer'
+      },
+      autumn: {
+        id: 'autumn',
+        title: 'فصل الخريف الذهبي',
+        desc: 'تتلوّن أوراق الشجرة بالأصفر والبرتقالي وتتساقط مرحة لتغطي الأرض برداء دافئ!',
+        icon: '🍂',
+        skyClass: 'sky-autumn',
+        hillFill: 'url(#hillAutumn)',
+        foliageFill: 'url(#foliageAutumn)',
+        treeShadowColor: '#5D4037',
+        treeShadowOpacity: 0.3,
+        blossomsOpacity: 0,
+        applesOpacity: 0,
+        leafPilesOpacity: 1,
+        snowmanOpacity: 0,
+        snowCapsOpacity: 0,
+        btnClass: 'btn-autumn'
+      },
+      winter: {
+        id: 'winter',
+        title: 'فصل الشتاء الأبيض',
+        desc: 'ترتاح الشجرة في نوم هادئ وتتغطى أغصانها بالثلج الناعم بجوار صديقنا رجل الثلج!',
+        icon: '❄️',
+        skyClass: 'sky-winter',
+        hillFill: 'url(#hillWinter)',
+        foliageFill: 'url(#foliageWinter)',
+        treeShadowColor: '#90A4AE',
+        treeShadowOpacity: 0.2,
+        blossomsOpacity: 0,
+        applesOpacity: 0,
+        leafPilesOpacity: 0,
+        snowmanOpacity: 1,
+        snowCapsOpacity: 1,
+        btnClass: 'btn-winter'
+      }
+    };
+
+    const seasonKeys = ['spring', 'summer', 'autumn', 'winter'];
+    let currentSeasonIndex = 0;
+    let isAutoplay = true;
+    let autoplayTimer = null;
+    let progressTimer = null;
+    let progressPercent = 0;
+    const SEASON_DURATION = 7000; // 7 ثوانٍ لكل فصل
+    let soundEnabled = false;
+
+    // عناصر الواجهة
+    const skyBg = document.getElementById('skyBg');
+    const storyBanner = document.getElementById('storyBanner');
+    const storyIcon = document.getElementById('storyIcon');
+    const seasonTitle = document.getElementById('seasonTitle');
+    const seasonDesc = document.getElementById('seasonDesc');
+    const hillPath = document.getElementById('hillPath');
+    const treeFoliage = document.getElementById('treeFoliage');
+    const treeShadow = document.getElementById('treeShadow');
+    const springBlossoms = document.getElementById('springBlossoms');
+    const summerApples = document.getElementById('summerApples');
+    const autumnLeafPiles = document.getElementById('autumnLeafPiles');
+    const snowmanGroup = document.getElementById('snowmanGroup');
+    const winterSnowCaps = document.getElementById('winterSnowCaps');
+    const mainTree = document.getElementById('mainTree');
+    const progressFill = document.getElementById('progressFill');
+    const seasonBtns = document.querySelectorAll('.season-btn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playPauseText = document.getElementById('playPauseText');
+    const soundBtn = document.getElementById('soundBtn');
+    const presentationBtn = document.getElementById('presentationBtn');
+    const exitPresBtn = document.getElementById('exitPresBtn');
+    const appViewport = document.getElementById('appViewport');
+    const clickHint = document.getElementById('clickHint');
+
+    /* ===================================================
+       المحرك الصوتي التفاعلي (Web Audio API)
+    =================================================== */
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playChime(freq = 440, type = 'sine', duration = 0.5) {
+      if (!soundEnabled || !audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) { console.log(e); }
+    }
+
+    function playSeasonSound(seasonKey) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (seasonKey === 'spring') {
+        playChime(523.25, 'sine', 0.6); // C5
+        setTimeout(() => playChime(659.25, 'sine', 0.6), 150); // E5
+        setTimeout(() => playChime(783.99, 'sine', 0.8), 300); // G5
+      } else if (seasonKey === 'summer') {
+        playChime(587.33, 'triangle', 0.5);
+        setTimeout(() => playChime(880, 'triangle', 0.7), 200);
+      } else if (seasonKey === 'autumn') {
+        playChime(349.23, 'sine', 0.8);
+        setTimeout(() => playChime(440, 'sine', 0.8), 250);
+      } else if (seasonKey === 'winter') {
+        playChime(987.77, 'sine', 0.9);
+        setTimeout(() => playChime(1318.51, 'sine', 1.0), 200);
+      }
+    }
+
+    /* ===================================================
+       نظام الجسيمات المتحركة Canvas Particles Engine
+    =================================================== */
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(type) {
+        this.reset(type);
+      }
+
+      reset(type) {
+        this.type = type;
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -canvas.height;
+        this.size = Math.random() * 10 + 6;
+        this.speedY = Math.random() * 1.5 + 0.8;
+        this.speedX = Math.random() * 1.5 - 0.75;
+        this.rotation = Math.random() * 360;
+        this.rotSpeed = (Math.random() - 0.5) * 2;
+        this.opacity = Math.random() * 0.7 + 0.3;
+
+        if (type === 'spring') {
+          // بتلات وردية
+          this.color = ['#FF80AB', '#FF4081', '#F8BBD0', '#FFFFFF'][Math.floor(Math.random() * 4)];
+        } else if (type === 'summer') {
+          // بريق الشمس والضوء
+          this.color = ['#FFF9C4', '#FFE082', '#FFF59D'][Math.floor(Math.random() * 3)];
+          this.size = Math.random() * 6 + 3;
+          this.speedY = Math.random() * 0.8 + 0.3;
+        } else if (type === 'autumn') {
+          // أوراق خريف ملونة
+          this.color = ['#E65100', '#FF9800', '#FFD54F', '#D84315'][Math.floor(Math.random() * 4)];
+          this.speedX = Math.random() * 2.5 - 0.5; // اتجاه رياح الخريف
+        } else if (type === 'winter') {
+          // رقاقات ثلج بيضاء
+          this.color = '#FFFFFF';
+          this.size = Math.random() * 5 + 3;
+          this.speedY = Math.random() * 2 + 1;
+        }
+      }
+
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX + Math.sin(this.y * 0.01);
+        this.rotation += this.rotSpeed;
+
+        if (this.y > canvas.height + 20) {
+          this.reset(seasonKeys[currentSeasonIndex]);
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.globalAlpha = this.opacity;
+
+        if (this.type === 'spring') {
+          // رسم بتلة زهرة
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.ellipse(0, 0, this.size, this.size / 1.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (this.type === 'summer') {
+          // رسم دائرية براقة
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (this.type === 'autumn') {
+          // رسم ورقة شجر خريفية
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.moveTo(0, -this.size);
+          ctx.quadraticCurveTo(this.size, 0, 0, this.size);
+          ctx.quadraticCurveTo(-this.size, 0, 0, -this.size);
+          ctx.fill();
+        } else if (this.type === 'winter') {
+          // رسم ندفة ثلجية
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    function initParticles(type) {
+      particles = [];
+      const count = type === 'winter' ? 70 : 45;
+      for (let i = 0; i < count; i++) {
+        const p = new Particle(type);
+        p.y = Math.random() * canvas.height; // توزيع ابتدائي على الشاشة
+        particles.push(p);
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    /* ===================================================
+       محرك التحول بين الفصول (Season Transition Logic)
+    =================================================== */
+    function setSeason(seasonKey) {
+      const data = seasonsData[seasonKey];
+      if (!data) return;
+
+      currentSeasonIndex = seasonKeys.indexOf(seasonKey);
+
+      // 1. تحديث الخلفية والنصوص
+      skyBg.className = `sky-bg ${data.skyClass}`;
+      storyIcon.textContent = data.icon;
+      seasonTitle.textContent = data.title;
+      seasonDesc.textContent = data.desc;
+
+      // 2. انيميشن نبض خفيف لعنوان القصة
+      storyBanner.style.animation = 'none';
+      setTimeout(() => { storyBanner.style.animation = 'floatBanner 4s ease-in-out infinite alternate'; }, 50);
+
+      // 3. تحديث ألوان أوراق الشجرة والتلة والظلال
+      hillPath.setAttribute('fill', data.hillFill);
+      
+      const foliageCircles = treeFoliage.querySelectorAll('path, circle');
+      foliageCircles.forEach(el => {
+        el.setAttribute('fill', data.foliageFill);
+      });
+
+      treeShadow.setAttribute('fill', data.treeShadowColor);
+      treeShadow.setAttribute('opacity', data.treeShadowOpacity);
+
+      // 4. إظهار/إخفاء مكونات الشجرة حسب الفصل
+      springBlossoms.style.opacity = data.blossomsOpacity;
+      summerApples.style.opacity = data.applesOpacity;
+      autumnLeafPiles.style.opacity = data.leafPilesOpacity;
+      snowmanGroup.style.opacity = data.snowmanOpacity;
+      winterSnowCaps.style.opacity = data.snowCapsOpacity;
+
+      // 5. تحديث حالة أزرار التحكم
+      seasonBtns.forEach(btn => {
+        if (btn.getAttribute('data-season') === seasonKey) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // 6. تفعيل جسيمات الطقس المناسبة
+      initParticles(seasonKey);
+
+      // 7. تشغيل صوت تحول الفصل
+      playSeasonSound(seasonKey);
+
+      // 8. إعادة تعويض شريط التقدم
+      resetProgress();
+    }
+
+    /* ===================================================
+       التشغيل التلقائي وشريط التقدم (Autoplay Engine)
+    =================================================== */
+    function startAutoplay() {
+      isAutoplay = true;
+      playPauseBtn.classList.add('active-toggle');
+      playPauseBtn.querySelector('i').className = 'fa-solid fa-pause';
+      playPauseText.textContent = 'إيقاف';
+      
+      resetProgress();
+    }
+
+    function stopAutoplay() {
+      isAutoplay = false;
+      playPauseBtn.classList.remove('active-toggle');
+      playPauseBtn.querySelector('i').className = 'fa-solid fa-play';
+      playPauseText.textContent = 'تشغيل تلقائي';
+
+      clearInterval(autoplayTimer);
+      clearInterval(progressTimer);
+      progressFill.style.width = '0%';
+    }
+
+    function resetProgress() {
+      clearInterval(autoplayTimer);
+      clearInterval(progressTimer);
+      progressPercent = 0;
+      progressFill.style.width = '0%';
+
+      if (!isAutoplay) return;
+
+      const stepTime = 100;
+      const totalSteps = SEASON_DURATION / stepTime;
+
+      progressTimer = setInterval(() => {
+        progressPercent += (100 / totalSteps);
+        progressFill.style.width = `${Math.min(progressPercent, 100)}%`;
+      }, stepTime);
+
+      autoplayTimer = setInterval(() => {
+        let nextIndex = (currentSeasonIndex + 1) % seasonKeys.length;
+        setSeason(seasonKeys[nextIndex]);
+      }, SEASON_DURATION);
+    }
+
+    /* ===================================================
+       التفاعل الممتع عند النقر على الشجرة (Tree Click Event)
+    =================================================== */
+    mainTree.addEventListener('click', () => {
+      // إخفاء تلميح النقر بعد أول نمرة
+      clickHint.style.display = 'none';
+
+      // 1. اهتزاز الشجرة
+      mainTree.classList.remove('shake-tree');
+      void mainTree.offsetWidth; // Trigger reflow
+      mainTree.classList.add('shake-tree');
+
+      // 2. إطلاق تساقط مكثف مفاجئ للجسيمات
+      const currentSeason = seasonKeys[currentSeasonIndex];
+      for (let i = 0; i < 25; i++) {
+        const p = new Particle(currentSeason);
+        p.x = 450 + Math.random() * 300; // ينطلق من تاج الشجرة
+        p.y = 150 + Math.random() * 200;
+        p.speedY = Math.random() * 3 + 2;
+        particles.push(p);
+      }
+
+      // 3. نغمة مرحة عند النقر
+      initAudio();
+      playChime(659.25, 'sine', 0.3);
+      setTimeout(() => playChime(880, 'sine', 0.4), 100);
+    });
+
+    /* ===================================================
+       أزرار التحكم والأحداث (UI Event Listeners)
+    =================================================== */
+    // أزرار اختيار الفصل Direct Jump
+    seasonBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const seasonKey = btn.getAttribute('data-season');
+        setSeason(seasonKey);
+      });
+    });
+
+    // زر تشغيل/إيقاف الحركة التلقائية
+    playPauseBtn.addEventListener('click', () => {
+      if (isAutoplay) {
+        stopAutoplay();
+      } else {
+        startAutoplay();
+      }
+    });
+
+    // زر الصوت
+    soundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        initAudio();
+        soundBtn.classList.add('active-toggle');
+        soundBtn.querySelector('i').className = 'fa-solid fa-volume-high';
+        playSeasonSound(seasonKeys[currentSeasonIndex]);
+      } else {
+        soundBtn.classList.remove('active-toggle');
+        soundBtn.querySelector('i').className = 'fa-solid fa-volume-xmark';
+      }
+    });
+
+    // زر وضع العرض الشامل Presentation Mode
+    presentationBtn.addEventListener('click', () => {
+      appViewport.classList.add('presentation-mode');
+    });
+
+    exitPresBtn.addEventListener('click', () => {
+      appViewport.classList.remove('presentation-mode');
+    });
+
+    /* ===================================================
+       بدء التطبيق
+    =================================================== */
+    window.onload = () => {
+      setSeason('spring');
+      startAutoplay();
+      animateParticles();
+    };
+  </script>
+</body>
+</html>
